@@ -1,0 +1,3 @@
+[submodule "cslEditorLib"]
+	path = cslEditorLib
+	url = git@github.com:fbennett/csl-editor.git
