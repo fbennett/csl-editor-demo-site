@@ -79,9 +79,9 @@ define(['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils, debug) {
 	// Returns the URL of the style with the given styleId on this server
 	var localURLFromZoteroId = function (styleId) {
 		var baseUrl = "external/csl-styles/";
-		//if (styles().masterIdFromId[styleId] !== styleId) {
-			//baseUrl += "dependent/";
-		//}
+		if (styles().masterIdFromId[styleId] !== styleId) {
+			baseUrl += "dependent/";
+		}
 
 		return CSLEDIT_urlUtils.getResourceUrl(
 			styleId.replace("http://citationstylist.org/styles/", baseUrl) + ".csl");
