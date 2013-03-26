@@ -24,6 +24,10 @@ define(
 	// e.g. when user clicks on an "Edit Style" button
 	var editStyle = function (styleId, visualEditorUrl) {
 		var styleURL = CSLEDIT_cslStyles.localURLFromZoteroId(styleId);
+
+		var baseUrl = "external/csl-styles/";
+        alert("DEBUG SO WHAT IS THIS? "+styleId.replace("http://citationstylist.org/styles/", baseUrl) + ".csl"));
+
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleURL,
 			function (cslCode) {
