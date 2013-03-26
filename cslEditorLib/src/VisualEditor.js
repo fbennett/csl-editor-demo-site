@@ -1607,7 +1607,7 @@ define('src/cslStyles',['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils
 		}
 
 		return CSLEDIT_urlUtils.getResourceUrl(
-			styleId.replace("http://citationstylist/github/", baseUrl) + ".csl");
+			styleId.replace("http://citationstylist.org/github/", baseUrl) + ".csl");
 	};
 
 	// This fetches the CSL code for the given styleId
