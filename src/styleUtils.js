@@ -24,6 +24,7 @@ define(
 	// e.g. when user clicks on an "Edit Style" button
 	var editStyle = function (styleId, visualEditorUrl) {
 		var styleURL = CSLEDIT_cslStyles.localURLFromZoteroId(styleId);
+        alert("DEBUG1: STYLE URL: "+styleURL);
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleURL,
 			function (cslCode) {
