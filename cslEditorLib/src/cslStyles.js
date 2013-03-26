@@ -93,9 +93,10 @@ define(['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils, debug) {
 		var localURL = localURLFromZoteroId(styleId);
 
 		if (typeof(async) === "undefined") {
-			async = true;
+			async = false;
 		}
 
+        try {
 		$.ajax({
 			url : localURL,
 			dataType : "text",
@@ -103,6 +104,9 @@ define(['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils, debug) {
 			error : error,
 			async : async
 		});
+        } catch (e) {
+            alert("OKAY, WHAT NOW: "+e);
+        }
 	};
 
 	// Returns an object containing information on all styles in the repository:
