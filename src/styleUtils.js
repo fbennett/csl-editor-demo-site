@@ -23,9 +23,7 @@ define(
 	// Event handler for an 'Edit Style' action
 	// e.g. when user clicks on an "Edit Style" button
 	var editStyle = function (styleId, visualEditorUrl) {
-        console.log("DEBUG1: STYLE ID: "+styleId);
 		var styleURL = CSLEDIT_cslStyles.localURLFromZoteroId(styleId);
-        console.log("DEBUG2: STYLE URL: "+styleURL);
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleURL,
 			function (cslCode) {
@@ -35,7 +33,7 @@ define(
 				}
 			},
 			function () {
-				alert("Couldn't fetch style: " + styleURL);
+				alert("DEBUG Couldn't fetch style: " + styleId+" -> "+styleURL);
 			}
 		);
 	};
@@ -55,6 +53,7 @@ define(
 	// Event handler for a 'Install Style' action
 	// e.g. when user clicks on an "Install Style" button
 	var installStyle = function (styleId) {
+        alert("DEBUG: Oh, fuck");
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleId,
 			function (cslCode) {
