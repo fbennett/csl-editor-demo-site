@@ -1,0 +1,10 @@
+Pending changes
+
+For OSCOLA, we need to change the subsequent-author-substitute-rule options to this:
+
+complete-all
+complete-each
+partial-each
+partial-first
+
+OSCOLA uses partial-first, which is not yet implemented.

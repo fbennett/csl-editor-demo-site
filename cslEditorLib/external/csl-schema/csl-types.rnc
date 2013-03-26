@@ -1,7 +1,6 @@
-
-## Item types
+## CSL Types
 div {
-  item-types =
+  cs-types =
     "article"
     | "article-journal"
     | "article-magazine"
@@ -10,11 +9,12 @@ div {
     | "book"
     | "broadcast"
     | "chapter"
-    | "dataset"
+    | "classic"
     | "entry"
     | "entry-dictionary"
     | "entry-encyclopedia"
     | "figure"
+    | "gazette"
     | "graphic"
     | "interview"
     | "legal_case"
@@ -26,15 +26,19 @@ div {
     | "pamphlet"
     | "paper-conference"
     | "patent"
+    | "periodical"
     | "personal_communication"
     | "post"
     | "post-weblog"
     | "report"
     | "review"
     | "review-book"
+    | "regulation"
     | "song"
     | "speech"
     | "thesis"
     | "treaty"
+    | "video"
     | "webpage"
 }
+

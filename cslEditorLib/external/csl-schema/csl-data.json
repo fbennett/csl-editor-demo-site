@@ -17,7 +17,6 @@
                     "book",
                     "broadcast",
                     "chapter",
-                    "dateset",
                     "entry",
                     "entry-dictionary",
                     "entry-encyclopedia",
@@ -58,9 +57,6 @@
                 "items": {
                     "type": "string" 
                 } 
-            },
-            "language": {
-                "type": "string" 
             },
             "journalAbbreviation": {
                 "type": "string" 
@@ -146,12 +142,6 @@
                     "$ref": "name-variable" 
                 } 
             },
-            "director": {
-                "type": "array",
-                "items": {
-                    "$ref": "name-variable" 
-                } 
-            },
             "editor": {
                 "type": "array",
                 "items": {
@@ -170,12 +160,6 @@
                     "$ref": "name-variable" 
                 } 
             },
-            "illustrator": {
-                "type": "array",
-                "items": {
-                    "$ref": "name-variable" 
-                } 
-            },
             "original-author": {
                 "type": "array",
                 "items": {
@@ -183,12 +167,6 @@
                 } 
             },
             "recipient": {
-                "type": "array",
-                "items": {
-                    "$ref": "name-variable" 
-                } 
-            },
-            "reviewed-author": {
                 "type": "array",
                 "items": {
                     "$ref": "name-variable" 
@@ -305,12 +283,6 @@
             "container-title": {
                 "type": "string" 
             },
-            "container-title-short": {
-                "type": "string" 
-            },
-            "dimensions": {
-                "type": "string" 
-            },
             "DOI": {
                 "type": "string" 
             },
@@ -333,9 +305,6 @@
                 "type": "string" 
             },
             "ISBN": {
-                "type": "string" 
-            },
-            "ISSN": {
                 "type": "string" 
             },
             "issue": {
@@ -389,12 +358,6 @@
             "page-first": {
                 "type": "string" 
             },
-            "PMCID": {
-                "type": "string" 
-            },
-            "PMID": {
-                "type": "string" 
-            },
             "publisher": {
                 "type": "string" 
             },
@@ -404,25 +367,13 @@
             "references": {
                 "type": "string" 
             },
-            "reviewed-title": {
-                "type": "string" 
-            },
-            "scale": {
-                "type": "string" 
-            },
             "section": {
-                "type": "string" 
-            },
-            "source": {
                 "type": "string" 
             },
             "status": {
                 "type": "string" 
             },
             "title": {
-                "type": "string" 
-            },
-            "title-short": {
                 "type": "string" 
             },
             "URL": {

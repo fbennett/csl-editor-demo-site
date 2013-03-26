@@ -1,98 +1,102 @@
 
-## Variables
+## name variables
 div {
-  
-  ## All variables
-  variables =
-    variables.dates
-    | variables.names
-    | variables.numbers
-    | variables.strings
-  
-  ## Standard variables
-  variables.standard = variables.numbers | variables.strings
-  
-  ## Date variables
-  variables.dates =
-    "accessed"
-    | "container"
-    | "event-date"
-    | "issued"
-    | "original-date"
-    | "submitted"
-  
-  ## Name variables
-  variables.names =
+  cs-names =
     "author"
+    | "authority"
     | "collection-editor"
     | "composer"
     | "container-author"
     | "director"
     | "editor"
     | "editorial-director"
-    | "illustrator"
     | "interviewer"
     | "original-author"
     | "recipient"
-    | "reviewed-author"
     | "translator"
-  
-  ## Number variables
-  variables.numbers =
+}
+
+## date variables
+div {
+  cs-dates =
+    "accessed"
+    | "available-date"
+    | "container"
+    | "event-date"
+    | "issued"
+    | "original-date"
+    | "submitted" 
+    | "locator-date"
+}
+
+## number variables
+div {
+  cs-numbers =
     "chapter-number"
     | "collection-number"
     | "edition"
     | "issue"
     | "number"
+    | "number-alt"
     | "number-of-pages"
     | "number-of-volumes"
+    | "page"
+    | "page-first"
+    | "session-number"
+    | "subsession-number"
+    | "meeting-number"
+    | "supplement"
     | "volume"
-  
-  ## String variables
-  variables.strings =
+}
+
+## standard variables
+div {
+  cs-strings =
     "abstract"
     | "annote"
     | "archive"
     | "archive_location"
     | "archive-place"
-    | "authority"
     | "call-number"
     | "citation-label"
     | "citation-number"
     | "collection-title"
     | "container-title"
-    | "container-title-short"
-    | "dimensions"
     | "DOI"
     | "event"
     | "event-place"
     | "first-reference-note-number"
     | "genre"
+    | "hereinafter"
     | "ISBN"
-    | "ISSN"
     | "jurisdiction"
     | "keyword"
     | "locator"
+    | "locator-revision"
     | "medium"
     | "note"
+    | "number"
     | "original-publisher"
     | "original-publisher-place"
     | "original-title"
-    | "page"
-    | "page-first"
-    | "PMID"
-    | "PMCID"
     | "publisher"
     | "publisher-place"
     | "references"
-    | "reviewed-title"
     | "scale"
     | "section"
-    | "source"
     | "status"
     | "title"
     | "title-short"
     | "URL"
     | "version"
     | "year-suffix"
+}
+
+## standard variables
+div {
+  cs-variables =
+    cs-strings
+    |
+      ## number variables
+      cs-numbers
 }

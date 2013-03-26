@@ -1,0 +1,30 @@
+======================================
+How to make branched changes in github
+======================================
+
+(1) Insulate the main repo from our changes by forking the project on github.
+
+(2) Create branches with git checkout -b dev_<NAME>
+
+(3) Set up tracking to forked repo on github with git push origin -u dev_<NAME>
+
+(4) Open branches with git checkout dev_<NAME>
+
+(5) Make changes inside branch, commit and document with git commit -a
+
+(6) Push branch changes to github with git push
+
+(7) Get the MD5 name of a commit within a branch with:
+
+       git checkout dev_<NAME>
+       git log | more
+
+    Cut and past the MD5 name.
+
+(8) Open master with git checkout dev_master
+
+(9) Merge commit to branch with git merge <MD5>
+
+(10) Push change to github master
+
+(11) If you put a foot wrong and things get tangled up, start all over.

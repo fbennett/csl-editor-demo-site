@@ -1,5 +1,5 @@
 namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
-namespace bibo = "http://purl.org/ontology/bibo/"
+namespace atom = "http://www.w3.org/2005/Atom"
 namespace cs = "http://purl.org/net/xbiblio/csl"
 namespace dc = "http://purl.org/dc/elements/1.1/"
 namespace sch = "http://www.ascc.net/xml/schematron"
@@ -10,1164 +10,1178 @@ namespace xhtml = "http://www.w3.org/1999/xhtml"
 dc:title [ "Citation Style Language" ]
 dc:creator [ "Bruce D'Arcus" ]
 dc:creator [ "Simon Kornblith" ]
-bibo:editor [ "Frank Bennett" ]
-bibo:editor [ "Rintze Zelle" ]
-dc:rights [
-  "Copyright 2007-2012 by Frank Bennett, Bruce D'Arcus, Simon Kornblith, and Rintze Zelle. Permission to freely use, copy and distribute."
-]
+dc:contributor [ "Frank Bennett" ]
+dc:contributor [ "Rintze Zelle" ]
+dc:copyright [ "Bruce D'Arcus and Simon Kornblith, 2007-2011" ]
+dc:rights [ "Permission to freely use, copy and distribute." ]
 dc:description [
-  "RELAX NG compact schema for the Citation Style Language (CSL)."
+    "Citation Style Language (CSL) schema for describing bibliographic and citation formatting."
 ]
-# Embedded Schematron rules to detect calls to nonexistent macros
 
-sch:ns [ uri = "http://purl.org/net/xbiblio/csl" prefix = "cs" ]
-sch:pattern [
-  name = "Non-existing macros"
-  sch:rule [
-    context = "//cs:text[@macro]"
-    sch:assert [
-      test = "@macro = /cs:style/cs:macro/@name"
-      "This macro call has no corresponding macro."
-    ]
-  ]
-  sch:rule [
-    context = "//cs:key[@macro]"
-    sch:assert [
-      test = "@macro = /cs:style/cs:macro/@name"
-      "This macro call has no corresponding macro."
-    ]
-  ]
-]
+start = independent-style | dependent-style | locale
 
 ## Subparts of the CSL schema
 include "csl-terms.rnc"
 include "csl-types.rnc"
 include "csl-variables.rnc"
 include "csl-categories.rnc"
-[
-  a:documentation [
-    xhtml:h2 [ "cs:style and cs:locale - Root Elements" ]
-  ]
+include "csl-jurisdictions.rnc"
+
+# Embedded Schematron rules to detect undefined macro-calls in cs:text, cs:key
+
+sch:ns [
+    uri = "http://purl.org/net/xbiblio/csl"
+    prefix = "cs"
+    ]
+sch:pattern [
+    name = "Non-existing macros"
+    sch:rule [
+        context = "//cs:text[@macro]"
+        sch:assert [
+            test = "@macro = /cs:style/cs:macro/@name"
+            "This macro call has no corresponding macro."
+        ]
+    ]
+    sch:rule [
+        context = "//cs:key[@macro]"
+        sch:assert [
+            test = "@macro = /cs:style/cs:macro/@name"
+            "This macro call has no corresponding macro."
+        ]
+    ]
 ]
+
+## Independent CSL style
 div {
-  start =
-    independent-style.style | dependent-style.style | locale-file.locale
-  
-  independent-style.style =
-    element cs:style {
-      
-      ## Select whether citations appear in-text or as notes.
-      attribute class { "in-text" | "note" },
-      style.default-locale,
-      style.options,
-      version,
-      independent-style.style.info,
-      (style.locale*
-       & style.macro*
-       & style.citation
-       & style.bibliography?)?
-    }
-  
-  dependent-style.style =
-    element cs:style {
-      style.default-locale,
-      version,
-      dependent-style.style.info,
-      dependent-style.style.legacy-attributes
-    }
-  
-  locale-file.locale =
-    element cs:locale {
-      
-      ## Specify the locale of the locale file.
-      attribute xml:lang { xsd:language },
-      version,
-      locale-file.locale.info?,
-      (locale.style-options & locale.date+ & locale.terms)
-    }
-  
-  style.default-locale =
-    
-    ## Set a default style locale.
-    attribute default-locale { xsd:language }?
-  
-  version =
-    
-    ## Indicate CSL version compatibility ("1.0" for CSL 1.0).
-    [ a:defaultValue = "1.0" ] attribute version { "1.0" }
-  
-  ## Obsolete for dependent styles. Will be disallowed with CSL 1.1.
-  dependent-style.style.legacy-attributes =
-    attribute class { "in-text" | "note" }?,
-    style.options
+    independent-style =
+        element cs:style {
+            
+            ## Default style locale (optional)
+            attribute default-locale { xsd:language }?,
+            
+            ## Style type (in-text citations or note-based)
+            attribute class { "in-text" | "note" },
+            
+            style-options,
+            version,
+            info,
+            (style-locale* & macro* & citation & bibliography?)?
+        }
 }
-[
-  a:documentation [
-    xhtml:h2 [ "cs:info - Style and Locale File Metadata" ]
-  ]
-]
+## Dependent CSL style
 div {
-  
-  ## Metadata for independent styles.
-  independent-style.style.info =
-    element cs:info {
-      info.author*
-      & info.category*
-      & info.contributor*
-      & info.id
-      & info.issn*
-      & info.eissn?
-      & info.issnl?
-      & independent-style.info.link*
-      & info.published?
-      & info.rights?
-      & info.summary?
-      & info.title
-      & info.title-short?
-      & info.updated
+    dependent-style =
+        element cs:style {
+            
+            ## Should be stripped from dependent styles for CSL 1.1
+            attribute class { "in-text" | "note" }?,
+            
+            version,
+            info-dependent-style
+        }
+}
+[ a:documentation [ xhtml:h2 [ "Style Metadata" ] ] ]
+div {
+    
+    ## The version of the CSL schema with which the style is compatible.
+    version = attribute version { "1.1mlz1" }
+    
+    ## Metadata for independent styles (model loosely based on that of Atom).
+    info =
+        element cs:info {
+            info-author*
+            & info-category*
+            & info-contributor*
+            & info-id
+            & info-issn*
+            & info-eissn?
+            & info-issnl?
+            & info-link*
+            & info-published?
+            & info-rights?
+            & info-summary?
+            & info-title
+            & info-title-short?
+            & info-updated?
+        }
+    
+    ## Metadata for dependent styles (model loosely based on that of Atom).
+    info-dependent-style = 
+        element cs:info {
+            info-author*
+            & info-category*
+            & info-contributor*
+            & info-id
+            & info-issn*
+            & info-eissn?
+            & info-issnl?
+            & info-link-dependent-style+
+            & info-published?
+            & info-rights?
+            & info-summary?
+            & info-title
+            & info-title-short?
+            & info-updated?
+        }
+
+    info-author = element cs:author { info-contributor-pattern }
+    info-contributor = element cs:contributor { info-contributor-pattern }
+    info-contributor-pattern =
+        element cs:name { text }
+        & element cs:email { text }?
+        & element cs:uri { xsd:anyURI }?
+
+    ## The category element may be used to specify the citation format of the
+    ## style (using the citation-format attribute) and the fields or disciplines
+    ## for which the style is relevant (using the field attribute).
+    info-category =
+        element cs:category {
+            attribute citation-format { info-format-categories }
+            | attribute field { info-field-categories }
+        }
+    
+    ## As in Atom, the cs:id element is a required URI that is globally-unique
+    ## and persistant. To allow styles to be automatically updated, the URI of a
+    ## style should not change once assigned. Ideally, the URI resolves to the
+    ## correct CSL file: it should preferably point to the CSL style itself in
+    ## case of independent styles, and to the independent-parent style in case
+    ## of dependent styles.
+    info-id = element cs:id { xsd:anyURI }
+    
+    ## The journal's ISSNs, eISSN or ISSN-L for journal-specific styles.
+    ## A ISSN must consist of four digits, a hyphen, three digits, and a 
+    ## check digit (a numeral digit or roman X), e.g. "1234-1231".
+    info-issn =
+        element cs:issn {
+            xsd:string { pattern = "\d{4}\-\d{3}(\d|x|X)" }
+        }
+    info-eissn =
+    element cs:eissn {
+            xsd:string { pattern = "\d{4}\-\d{3}(\d|x|X)" }
+        }
+    info-issnl =
+        element cs:issnl {
+            xsd:string { pattern = "\d{4}\-\d{3}(\d|x|X)" }
+        }
+    
+    info-link =
+        element cs:link {
+            attribute href { xsd:anyURI },
+            
+            ## For transformation to Atom, the rel values should be expanded to
+            ## include the base URI <http://purl.org/net/xbiblio/csl/relations#>.
+            attribute rel {
+                
+                ## The URI of the CSL style itself.
+                "self"
+                | 
+                  ## The CSL style URI from which the current style is derived.
+                  "template"
+                | 
+                  ## A documentation URI for the style.
+                  "documentation"
+            },
+            info-text
+        }
+    
+    info-link-dependent-style =
+        element cs:link {
+            attribute href { xsd:anyURI },
+            
+            ## For transformation to Atom, the rel values should be expanded to
+            ## include the base URI <http://purl.org/net/xbiblio/csl/relations#>.
+            attribute rel {
+                
+                ## The URI of the CSL style itself.
+                "self"
+                | 
+                  ## The CSL style URI whose content should be used for
+                  ## processing. Required for dependent styles.
+                  "independent-parent"
+                | 
+                  ## A documentation URI for the style.
+                  "documentation"
+            },
+            info-text
+        }
+    
+    ## Typically, the date of initial creation or first availability
+    info-published = element cs:published { xsd:dateTime }
+    
+    info-rights =
+        element cs:rights {
+            attribute license { xsd:anyURI }?,
+            info-text
+        }
+    
+    info-summary = element cs:summary { info-text }
+    info-title = element cs:title { info-text }
+    
+    ## For abbreviated titles (e.g. "APA")
+    info-title-short = element cs:title-short { info-text }
+    
+    ## Date and time of last style update, e.g. 2007-10-26T21:32:52+02:00
+    info-updated = element cs:updated { xsd:dateTime? }
+    
+    info-text =
+        attribute xml:lang { xsd:language }?,
+        text
+}
+[ a:documentation [ xhtml:h2 [ "Localization" ] ] ]
+div {
+    
+    ## CSL locale file (locales-xx-XX.xml)
+    locale =
+        element cs:locale {
+            
+            ## Specifies the locale of the locale file.
+            attribute xml:lang { xsd:language },
+            
+            ## Indicates with which version of the CSL schema the locale file is compatible
+            attribute version { "1.0" },
+            
+            (localized-terms & localized-dates+ & localized-options)
+        }
+    
+    ## In styles, cs:locale can be used to override localized terms, dates and options.
+    style-locale =
+        element cs:locale {
+            
+            ## Specifies the locale to override. A cs:locale element without the
+            ## xml:lang attribute can also be used: it overrides the content of
+            ## all locales, but is in turn overridden by cs:locale elements with
+            ## the xml:lang attribute.
+            attribute xml:lang { xsd:language }?,
+            
+            (localized-terms? & localized-dates* & localized-options?)
+        }
+
+    localized-terms = element cs:terms { (simple-term | compound-term)+ }
+    term-attributes =
+        (( attribute form { cs-term-forms }?,
+           attribute name { cs-terms } )
+           | (attribute form { "long" }?,
+           attribute name { cs-terms.gender-variants },
+           attribute gender-form { "masculine" | "feminine" })
+           | (attribute form { "long" }?,
+           attribute name { cs-terms.gender-assignable },
+           attribute gender { "masculine" | "feminine" }))
+
+    ## "verb-short" reverts to "verb" if the "verb-short" form is not available
+    ## "symbol" reverts to "short" if the "symbol" form is not available
+    ## "verb" and "short" revert to "long" if the specified form is not available
+    cs-term-forms = "long" | "verb" | "short" | "verb-short" | "symbol" | cs-term-forms.extension
+    
+    ## Extension structures. You may override these in a customization 
+    ## schema. If you do, please contact the xbiblio project to add 
+    ## the term or form to the formal controlled list in the schema.
+    div {
+        cs-terms.extension = notAllowed
+        cs-term-forms.extension = notAllowed
     }
-  
-  ## Metadata for dependent styles.
-  dependent-style.style.info =
-    element cs:info {
-      info.author*
-      & info.category*
-      & info.contributor*
-      & info.id
-      & info.issn*
-      & info.eissn?
-      & info.issnl?
-      & dependent-style.info.link+
-      & info.published?
-      & info.rights?
-      & info.summary?
-      & info.title
-      & info.title-short?
-      & info.updated
-    }
-  
-  ## Metadata for locale files.
-  locale-file.locale.info =
-    element cs:info { info.translator* & info.rights? & info.updated? }
-  
-  info.author = element cs:author { personal-details }
-  
-  info.contributor = element cs:contributor { personal-details }
-  
-  info.translator = element cs:translator { personal-details }
-  
-  personal-details =
-    element cs:name { text }
-    & element cs:email { text }?
-    & element cs:uri { xsd:anyURI }?
-  
-  info.category =
     
-    ## Specify the citation format of the style (using the "citation-format"
-    ## attribute) or the fields and disciplines for which the style is
-    ## relevant (using the "field" attribute).
-    element cs:category {
-      attribute citation-format { category.citation-format }
-      | attribute field { category.field }
-    }
-  
-  info.id =
+    ## Simple terms are basic strings, used to represent genres, media, etc.
+    simple-term = element cs:term { term-attributes, text }
     
-    ## Specify the URI to establish the identity of the style. The URI
-    ## should be stable, unique and dereferenceable URI.
-    element cs:id { xsd:anyURI }
-  
-  info.issn =
+    ## Compound terms are those whose output can be either singular or plural. 
+    ## Typically used for things like page number or editor labels.
+    compound-term = element cs:term { term-attributes, single-term, multiple-term }
+    multiple-term = element cs:multiple { text }
+    single-term = element cs:single { text }
     
-    ## Specify the journal's ISSN(s) for journal-specific styles. An ISSN
-    ## must consist of four digits, a hyphen, three digits, and a check
-    ## digit (a numeral digit or roman X), e.g. "1234-1231".
-    element cs:issn { issn }
-  
-  info.eissn =
+    ## Instances of cs:date for which the form attribute is set are localized
+    ## by default. Localized date formats can be overridden.
+    localized-dates =
+        element cs:date {
+            
+            ## Declares the type of date being defined.
+            attribute form {
+                
+                ## Text form of the date (e.g. "December 15, 2005" for en-US).
+                "text"
+                | 
+                  ## Numeric form of the date (e.g. "12-15-2005" for en-US)
+                  "numeric"
+            },
+            
+            ## No affixes may be applied to cs:date in cs:locale
+            font-formatting,
+            delimiter,
+            element cs:date-part {
+                affixes-date, text-case, font-formatting, (month | day | year)
+            }+
+        }
     
-    ## Specify the journal's eISSN for journal-specific styles.
-    element cs:eissn { issn }
-  
-  info.issnl =
-    
-    ## Specify the journal's ISSN-L for journal-specific styles.
-    element cs:issnl { issn }
-  
-  issn = xsd:string { pattern = "\d{4}\-\d{3}(\d|x|X)" }
-  
-  independent-style.info.link =
-    element cs:link {
-      attribute href { xsd:anyURI },
-      
-      ## Specify how the URL relates to the style.
-      attribute rel {
+    ## Locale specific options.
+    localized-options =
         
-        ## The URI of the CSL style itself.
-        "self"
-        | 
-          ## URI of the style from which the current style is derived.
-          "template"
-        | 
-          ## URI of style documentation.
-          "documentation"
-        | 
-          ## Obsolete for independent styles. Will be disallowed with
-          ## CSL 1.1.
-          "independent-parent"
-      },
-      info-text
+        ## Localized global options are specified as attributes in the
+        ## cs:style-options element. If future versions of CSL include localized
+        ## options that are citation or bibliography specific, the elements
+        ## cs:citation-options and cs:bibliography-options can be added.
+        element cs:style-options {
+            
+            ## Determines whether punctuation (commas and periods) goes within 
+            ## the quotation marks, or outside (default).
+            attribute punctuation-in-quote { xsd:boolean }?,
+
+            ## Resets the default list of skip-words. List is space-delimited list of arbitrary strings.
+            attribute skip-words { text }?
+        }
+}
+[ a:documentation [ xhtml:h2 [ "Macros" ] ] ]
+div {
+    
+    ## The macro element works something like in BibTeX, and provides a ready-made 
+    ## bundle of formatting templates that can be easily reused elsewhere.
+    macro =
+        element cs:macro {
+            attribute name { xsd:NMTOKEN },
+            cs-element
+        }
+}
+[ a:documentation [ xhtml:h2 [ "Citation and Bibliography" ] ] ]
+div {
+    
+    ## The cs:citation handles printing of citations. A citation may consist of
+    ## one or more references to bibliographic sources. These references can either
+    ## be simple in-text keys [doe99] or numeric markers [1], or more complex short
+    ## descriptors common in author-date (Doe, 1999a) or note styles.
+
+    citation = element cs:citation { 
+        (citation-options & sort?),
+        citation-layout-locale*,
+        citation-layout-default
     }
-  
-  dependent-style.info.link =
-    element cs:link {
-      attribute href { xsd:anyURI },
-      
-      ## Specify how the URL relates to the style.
-      attribute rel {
+    
+    bibliography = element cs:bibliography {
+        (bibliography-options & sort?),
+        bibliography-layout-locale*,
+        bibliography-layout-default
+    }
+
+	citation-layout-locale = element cs:layout { affixes, font-formatting, delimiter, cs-element, layout-locale }
+	citation-layout-default = element cs:layout { affixes, font-formatting, delimiter, cs-element }
+
+	bibliography-layout-locale = element cs:layout { affixes, font-formatting, layout-locale, cs-generate?, cs-element }
+	bibliography-layout-default = element cs:layout { affixes, font-formatting, cs-generate?, cs-element }
+
+    cs-generate = element cs:generate {
+        attribute type-map {
+            list { (cs-types, cs-types) }
+        },
+        attribute trigger-fields {
+            list { cs-variables+ }
+        }
+    }+
+
+    cs-element = (names | date | label | cs-text | cs-number | choose | group)+
+
+    layout-locale = attribute locale { 
+        list { xsd:language+ }
+    }
+}
+[ a:documentation [ xhtml:h2 [ "Contributor Names" ] ] ]
+div {
+    ## Options for cs:names, available for cs:style, cs:citation and cs:bibliography.
+    names-opt =
+        ## Delimiter between names (delimiter between variables is on <names>
+        ## tag, where it should be). This is ", " in "J. Doe, S. Smith."
+        attribute names-delimiter { text }?
+    
+    names-attributes =
+        affixes,
+        display,
+        font-formatting,
         
-        ## The URI of the CSL style itself.
-        "self"
-        | 
-          ## URI of the CSL style whose content should be used for
-          ## processing. Required for dependent styles.
-          "independent-parent"
-        | 
-          ## URI of style documentation.
-          "documentation"
-        | 
-          ## Obsolete for dependent styles. Will be disallowed with CSL
-          ## 1.1.
-          "template"
-      },
-      info-text
-    }
-  
-  info.published =
+        ## the delimiter between name groups
+        delimiter,
+        attribute variable {
+            list { cs-names+ }
+        }
     
-    ## Specify when the style was initially created or made available.
-    element cs:published { xsd:dateTime }
-  
-  info.rights =
-    element cs:rights {
-      attribute license { xsd:anyURI }?,
-      info-text
-    }
-  
-  info.summary = element cs:summary { info-text }
-  
-  info.title = element cs:title { info-text }
-  
-  info.title-short =
+    ## Options for cs:name, available for cs:style, cs:citation and cs:bibliography.
+    name-opt =
+        name-attributes,
+        
+        ## Indicates long (first name + last name, for Western names) or short
+        ## (last name only, for Western names) form of name. Default is long
+        ## form. The "count" form is used to return the count of the contributor
+        ## list, and may be used in special sorting routines.
+        attribute name-form { "long" | "short" | "count" }?,
+        
+        ## Delimiter between names (delimiter between variables is on <names>
+        ## tag, where it should be). This is ", " in "J. Doe, S. Smith."
+        attribute name-delimiter { text }?
     
-    ## Specify an abbreviated style title (e.g., "APA")
-    element cs:title-short { info-text }
-  
-  info.updated =
+    name-attributes =
+        ## Controls appearance of "and"/"&". To disable, do not specify.
+        attribute and { "text" | "symbol" }?,
+        
+        ## Delimiter between the last name rendered and the "et-al" term in case
+        ## of et-al abbreviation
+        attribute delimiter-precedes-et-al {
+        
+            ## Default behavior; a space is used for name lists truncated to a
+            ## single name. For two or more names, the name delimiter is used:
+            ## 1 name: "J. Doe et al."
+            ## 2 names: "J. Doe, S. Smith, et al."
+            "contextual"
+            | 
+            ## Name delimiter is always used
+            ## 1 name: "J. Doe, et al."
+            ## 2 names: "J. Doe, S. Smith, et al."
+            "always"
+            | 
+            ## Name delimiter is never used
+            ## 1 name: "J. Doe et al."
+            ## 2 names: "J. Doe, S. Smith et al."
+            "never"
+            }?,
+        
+        ## Delimiter preceding the last name in a name list
+        attribute delimiter-precedes-last {
+        
+            ## Default behavior; delimiter is included for name lists of length
+            ## three or more:
+            ## 2 authors: "J. Doe and T. Timmons,"
+            ## 3 authors: "J. Doe, S. Smith, and T. Timmons" (note comma preceding 'and').
+            "contextual"
+            | 
+              ## Delimiter is always included
+              ## 2 author result: "J. Doe, and T. Timmons"
+              ## 3 authors: "J. Doe, S. Smith, and T. Timmons" (note comma preceding 'and').
+              "always"
+            | 
+              ## Delimiter is never included
+              ## 2 authors: "J. Doe and T. Timmons,"
+              ## 3 authors: "J. Doe, S. Smith and T. Timmons"
+              "never"
+            }?,
+        
+        ## Specifies when and how "et al." name list abbreviation is used
+        ##   et-al-min: the minimum number of names to use "et al."
+        ##   et-al-use-first: the number of names to print before "et al."
+        ##   et-al-subsequent-*: as above, but for subsequent citations
+        ##   et-al-use-last: when set to "true" ("false" is the default),
+        ##   "et al." is replaced by an ellipsis followed by the last name
+        attribute et-al-min { xsd:integer }?,
+        attribute et-al-use-first { xsd:integer }?,
+        attribute et-al-subsequent-min { xsd:integer }?,
+        attribute et-al-subsequent-use-first { xsd:integer }?,
+        attribute et-al-use-last { xsd:boolean }?,
+        
+        ## Indicates whether given name parts ought to be given as initials
+        ## (e.g., J. K. Rowling) and the text to follow each initial.
+        attribute initialize-with { text }?,
+        
+        ## Indicates whether to suppress initialization. When true, the string 
+        ## argument to initialize-with is applied to initials contained
+        ## in the full form of the name.
+        attribute initialize { xsd:boolean }?,
+		
+        ## Sets the author name order to correspond to the sort order of
+        ## the bibliography; e.g. Doe, John (name-as-sort-order) vs. John Doe (w/o
+        ## attribute).
+        attribute name-as-sort-order {
+        
+            ## Applies name-as-sort-order to first author only.
+            "first"
+            | 
+              ## Applies name-as-sort-order to all authors.
+              "all"
+            }?,
+        
+        ## Suppress output if number of names is at or above a min,
+        ## or at or below a max value
+        attribute suppress-min { xsd:integer }?,
+        attribute suppress-max { xsd:integer }?,
+
+        ## The delimiter for personal name parts where sort order differs from 
+        ## display order (for example, in standard Western names). This is the
+        ## ", " in "Doe, John."
+        attribute sort-separator { text }?
     
-    ## Specify when the style was last updated (e.g.,
-    ## "2007-10-26T21:32:52+02:00")
-    element cs:updated { xsd:dateTime }
-  
-  info-text =
-    attribute xml:lang { xsd:language }?,
-    text
+    ## Attributes for use in formatting institution names
+    institution-attributes =
+        delimiter?,
+        attribute form { "long" | "short" }?,
+        attribute part-separator { text }?,
+        ## The order of institution subunits can be reversed
+        attribute reverse-order { "true" | "false" }?,
+        ( 
+          ## Include the first n institutional subunit names,
+          ## even when a personal name is also present
+          attribute use-first { xsd:integer }
+          |
+          ## Include the first n institutional subunit names
+          ## only if no personal names are present
+            attribute substitute-use-first { xsd:integer }
+        )?,
+        ## Controls appearance of "and"/"&". Default is "none".
+        attribute and { "text" | "symbol" | "none" }?,
+        ## Always include the last n institutional subunit names,
+        ## after first dropping subunits with stop-last
+        attribute use-last { xsd:integer }?,
+        ## Always ignore the last n institutional subunit names
+        attribute stop-last { xsd:integer }?,
+        ## Controls which forms of an institutional subunit name
+        ## to include
+        attribute institution-parts { "long" | "short" | "long-short" | "short-long" }?
+
+    names =
+        element cs:names {
+            names-attributes,
+            (name-label-before?, name?, et-al?, institution?, name-label-after?),
+            substitute?
+        }
+    
+    ## Short version of "names" element, without children, allowed in <substitute>
+    names-short = element cs:names { names-attributes }
+    
+    name =
+        element cs:name {
+            name-attributes,
+            affixes,
+            font-formatting,
+            
+            ## Indicates long (first name + last name, for Western names) or short
+            ## (last name only, for Western names) form of name. Default is long
+            ## form. The "count" form is used to return the count of the contributor
+            ## list, and may be used in special sorting routines.
+            attribute form { "long" | "short" | "count" }?,
+            
+            ## Delimiter between names (delimiter between variables is on <names>
+            ## tag, where it should be). This is ", " in "J. Doe, S. Smith."
+            delimiter,
+            
+            ## Allows for separate configuration of name part formatting. For example, 
+            ## Jane DOE. Order of these elements is not significant.
+            element cs:name-part {
+                attribute name { "family" | "given" },
+                text-case,
+                affixes,
+                font-formatting
+            }*
+        }
+    
+    ## Similar to label as below, but inherits variable from <names> tag
+    name-label-before = element cs:label {
+                     attribute form { cs-term-forms }?,
+					 affixes-leading-name-label,
+                     label-primitives
+                 }
+    name-label-after = element cs:label {
+                     attribute form { cs-term-forms }?,
+					 affixes-trailing-name-label,
+                     label-primitives
+                 }
+    
+    ## Configures formatting of the et al substitution. Only necessary to deviate from 
+    ## default rendering (for example, to italicize the string).
+    et-al =
+        element cs:et-al {
+            
+            ## term to use for et al substitution; "et-al" is default
+            attribute term { "et-al" | "and others" }?,
+            affixes,
+            font-formatting
+        }
+    
+    ## Institution, used to format institutional subunit names
+    ## Institutional subunit names always follow personal names
+    ## when this element is included in cs:names
+    institution = 
+        element cs:institution {
+            institution-attributes,
+            ## formatting and affixes of long and short
+            ## forms may be controlled individually
+            element cs:institution-part {
+                ( ( attribute name { "long" },
+                    ## apply formatting to long form only
+                    ## if short form is also available
+                    attribute if-short { "true" | "false" }? )
+                  | attribute name { "short" }
+                ),
+                text-case,
+                strip-periods,
+                font-formatting,
+                affixes
+            }*
+        }
+    
+    ## Substitutions, if the name does not exist
+    substitute = element cs:substitute { (names-short | cs-element)+ }
 }
-[ a:documentation [ xhtml:h2 [ "cs:locale in Independent Styles" ] ] ]
+[ a:documentation [ xhtml:h2 [ "Dates" ] ] ]
 div {
-  style.locale =
+    date =
+        element cs:date {
+            attribute variable { cs-dates },
+            ((
+              ## Localized date formats are specified by setting `form`. The
+              ## default date format can be changed for all locales by configuring
+              ## the date-parts attribute and date-part elements.
+              attribute form {
+                  
+                  ## Use the localized text form of the date (e.g. "December 15, 2005" for en-US).
+                  "text"
+                  | 
+                    ## Use the localized numeric form of the date (e.g. "12-15-2005" for en-US)
+                    "numeric"
+              },
+              
+              ## The date-parts attribute may be set to show fewer date elements.
+              attribute date-parts {
+                  
+                  ## Year, month and day (default)
+                  "year-month-day"
+                  | 
+                    ## Year and month
+                    "year-month"
+                  | 
+                    ## Year only
+                    "year"
+              }?,
+              
+              ## For localized dates, date-part can be used to override layout
+              ## options as defined in the locales (except for affixes, which
+              ## are locale-specific), e.g. to force the use of leading-zeros,
+              ## or the short month form. The inclusion of date-parts does not 
+              ## affect which, and in what order, the date-parts are rendered.
+              element cs:date-part { text-case, font-formatting, (month | day | year) }*)
+             | (
+                ## Non-localized dates are formatted by including, in the desired
+                ## order, the relevant `date-part`-elements, and by applying formatting,
+                ## affixes on cs:date and cs:date-part.
+                element cs:date-part {
+                    affixes-date, text-case, font-formatting, (month | day | year)
+                }+,
+                delimiter)),
+            affixes,
+            display,
+            font-formatting
+        }
     
-    ## Use to (re)define localized terms, dates and options.
-    element cs:locale {
-      
-      ## Specify the affected locale(s). If "xml:lang" is not set, the
-      ## "cs:locale" element affects all locales.
-      attribute xml:lang { xsd:language }?,
-      (locale.style-options? & locale.date* & locale.terms?)
-    }
+    ## The default delimiter for date ranges is the en-dash.
+    ## If the range-delimiter attribute is set for the largest date-part ("day",
+    ## "month" or "year") that differs between the two dates of the date range,
+    ## its value is used instead.
+    range-delimiter = attribute range-delimiter { text }?
+    
+    ## Month formats:
+    ##     long (default): January
+    ##     short: Jan
+    ##     numeric: 1
+    ##     numeric-leading-zeros: 01
+    month =
+        attribute name { "month" },
+        attribute form { "long" | "short" | "numeric" | "numeric-leading-zeros" }?,
+        range-delimiter,
+        strip-periods
+    
+    ## Day formats:
+    ##     numeric (default): 5
+    ##     numeric-leading-zeros: 05
+    ##     ordinal: 5th
+    day =
+        attribute name { "day" },
+        attribute form { "numeric" | "numeric-leading-zeros" | "ordinal" }?,
+        range-delimiter
+    
+    ## Year formats:
+    ##     long (default): 2005
+    ##     short: 05
+    year =
+        attribute name { "year" },
+        attribute form { "short" | "long" }?,
+        range-delimiter
+    
 }
-[
-  a:documentation [
-    xhtml:h2 [ "cs:locale Contents - Localization Data" ]
-  ]
-]
+[ a:documentation [ xhtml:h2 [ "Formatting Text" ] ] ]
 div {
-  
-  ## Localized global options are specified as attributes in the
-  ## cs:style-options element. If future versions of CSL include localized
-  ## options that are citation or bibliography specific, the elements
-  ## cs:citation-options and cs:bibliography-options can be added.
-  locale.style-options =
-    element cs:style-options {
-      
-      ## Limit the "ordinal" form to the first day of the month.
-      [ a:defaultValue = "false" ]
-      attribute limit-day-ordinals-to-day-1 { xsd:boolean }?,
-      
-      ## Specify whether punctuation (a period or comma) is placed within
-      ## or outside (default) the closing quotation mark.
-      [ a:defaultValue = "false" ]
-      attribute punctuation-in-quote { xsd:boolean }?
-    }
-  
-  locale.date =
-    element cs:date {
-      date.form,
-      delimiter,
-      font-formatting,
-      text-case,
-      locale.date.date-part+
-    }
-  
-  date.form =
     
-    ## Select the localized date format ("text" or "numeric").
-    attribute form {
-      
-      ## Text date form (e.g., "December 15, 2005").
-      "text"
-      | 
-        ## Numeric date form (e.g., "2005-12-15").
-        "numeric"
-    }
-  
-  locale.date.date-part =
-    element cs:date-part {
-      affixes, font-formatting, text-case, (day | month | year)
-    }
-  
-  locale.terms = element cs:terms { terms.term+ }
-  
-  ## The "cs:term" element can either hold a basic string, or "cs:single" and
-  ## "cs:multiple" child elements to give singular and plural forms of the term.
-  terms.term =
-    element cs:term {
-      term.attributes,
-      (text | (term.single, term.multiple))
-    }
-  
-  term.attributes =
-    (attribute name { terms },
-     [ a:defaultValue = "long" ] attribute form { term.form }?)
-    | (attribute name { terms.ordinals },
-       attribute form { "long" }?,
-       attribute gender-form { "masculine" | "feminine" }?,
-       attribute match { "last-digit" | "last-two-digits" | "whole-number" }?)
-    | (attribute name { terms.long-ordinals },
-       attribute form { "long" }?,
-       attribute gender-form { "masculine" | "feminine" })
-    | (attribute name { terms.gender-assignable },
-       attribute form { "long" }?,
-       attribute gender { "masculine" | "feminine" })
-  
-  ## "verb-short" reverts to "verb" if the "verb-short" form is not available.
-  ## "symbol" reverts to "short" if the "symbol" form is not available.
-  ## "verb" and "short" revert to "long" if the specified form is not available.
-  term.form = "long" | "verb" | "short" | "verb-short" | "symbol"
-  term.single =
+    ## The cs:text element is the main formatting element used to layout down content.
+    cs-text =
+        element cs:text {
+            affixes,
+            display,
+            font-formatting,
+            quotes,
+            strip-periods,
+            text-case,
+            (
+             ## render macro output
+             (
+               attribute macro { xsd:NMTOKEN },
+               attribute label-form { cs-term-forms }?)
+             | (
+                ## render localized term
+                attribute term { cs-terms },
+                attribute form { cs-term-forms }?,
+                
+                ## term plurality: single ("false", default) or multiple ("true")
+                attribute plural { xsd:boolean }?)
+             |
+               ## render verbatim text.
+               attribute value { text }
+             | (
+                ## render variable
+                attribute variable { cs-strings },
+                attribute form { "short" | "long" }?,
+                attribute leading-noise-words { "drop" | "demote" }?))
+        }
     
-    ## Singular version of the term.
-    element cs:single { text }
-  
-  term.multiple =
-    
-    ## Plural version of the term.
-    element cs:multiple { text }
+    ## The number markup directive matches the first number found in a field, 
+    ## and returns only that component. If no number is detected, the result 
+    ## is empty. A non-empty number may be subject to further formatting consisting 
+    ## of a form attribute whose value may be numeric, ordinal or roman to format 
+    ## it as a simple number (the default), an ordinal number (1st, 2nd, 3rd etc), 
+    ## a long-ordinal (first, second, third, etc), or roman (i, ii, iii, iv etc). 
+    ## The text-case can also apply to capitalize the roman numbers for instance. 
+    ## The other normal formatting rules apply too (font-style, ...). When used 
+    ## in a conditional, number tests if there is a number present, allowing conditional 
+    ## formatting.
+    cs-number =
+        element cs:number {
+            affixes,
+            display,
+            font-formatting,
+            text-case,
+            attribute variable { cs-numbers | "locator" },
+            attribute form { "numeric" | "ordinal" | "roman" | "long-ordinal" }?,
+            attribute label-form { cs-term-forms }?
+        }
 }
-[ a:documentation [ xhtml:h2 [ "cs:macro" ] ] ]
+[ a:documentation [ xhtml:h2 [ "Label Text" ] ] ]
 div {
-  style.macro =
     
-    ## Use to create collections of (reusable) formatting instructions.
-    element cs:macro {
-      attribute name { xsd:NMTOKEN },
-      rendering-element+
-    }
-  
-  rendering-element =
-    rendering-element.names
-    | rendering-element.date
-    | rendering-element.label
-    | rendering-element.text
-    | rendering-element.number
-    | rendering-element.choose
-    | rendering-element.group
+    ## The label element is used to print text terms that depend on document content
+    ## for pluralization. For labeling pages, this is preferable, as pages may be
+    ## either singular or plural (p. or pp.)
+    label =
+        element cs:label {
+            label-primitives,
+            affixes,
+            attribute variable { cs-numbers | "locator" | "page" },
+            attribute form { "long" | "short" | "symbol" }?
+        }
+    label-primitives =
+        font-formatting,
+        text-case,
+        strip-periods,
+        
+        ## modifies pluralization behavior (defaults to "contextual")
+        attribute plural { "always" | "never" | "contextual" }?
 }
-[ a:documentation [ xhtml:h2 [ "cs:citation and cs:bibliography" ] ] ]
+[ a:documentation [ xhtml:h2 [ "Groups" ] ] ]
 div {
-  style.citation =
     
-    ## Use to describe the formatting of citations.
-    element cs:citation { citation.options, sort?, citation.layout }
-  
-  style.bibliography =
-    
-    ## Use to describe the formatting of the bibliography.
-    element cs:bibliography {
-      bibliography.options, sort?, bibliography.layout
-    }
-  
-  citation.layout =
-    element cs:layout {
-      affixes, delimiter, font-formatting, rendering-element+
-    }
-  
-  bibliography.layout =
-    element cs:layout { affixes, font-formatting, rendering-element+ }
-}
-[ a:documentation [ xhtml:h2 [ "cs:names Rendering Element" ] ] ]
-div {
-  rendering-element.names =
-    element cs:names {
-      names.attributes,
-      ((names.name?, names.et-al?) & names.label*),
-      names.substitute?
-    }
-  
-  names.attributes =
-    attribute variable {
-      list { variables.names+ }
-    },
-    affixes,
-    
-    ## Specify the delimiter for name lists of name variables rendered by
-    ## the same cs:names element.
-    delimiter,
-    display,
-    font-formatting
-  
-  names.name =
-    element cs:name {
-      name.attributes,
-      
-      ## Select the "long" (first name + last name, for Western names),
-      ## "short" (last name only, for Western names), or "count" name form
-      ## (returning the number of names in the name variable, which can be
-      ## useful for some sorting algorithms).
-      [ a:defaultValue = "long" ]
-      attribute form { "long" | "short" | "count" }?,
-      affixes,
-      
-      ## Set the delimiter for names in a name variable (e.g., ", " in
-      ## "Doe, Smith")
-      [ a:defaultValue = ", " ] delimiter,
-      font-formatting,
-      name.name-part*
-    }
-  
-  name.attributes =
-    
-    ## Use to separate the second-to-last and last name of a name list by
-    ## the "and" term or ampersand.
-    attribute and {
-      
-      ## Use the "and" term (e.g., "Doe, Johnson and Smith").
-      "text"
-      | 
-        ## Use the "ampersand" (e.g., "Doe, Johnson & Smith").
-        "symbol"
-    }?,
-    
-    ## Specify when the name delimiter is used between a truncated name list
-    ## and the "et-al" (or "and others") term in case of et-al abbreviation
-    ## (e.g., "Smith, Doe et al." or "Smith, Doe, et al.").
-    [ a:defaultValue = "contextual" ]
-    attribute delimiter-precedes-et-al {
-      
-      ## The name delimiter is only used when the truncated name list
-      ## consists of two or more names.
-      "contextual"
-      | 
-        ## The name delimiter is always used.
-        "always"
-      | 
-        ## The name delimiter is never used.
-        "never"
-      | 
-        ## The name delimiter is only used if the preceding name is inverted as
-        ## a result of the "name-as-sort-order" attribute.
-        "after-inverted-name"
-    }?,
-    
-    ## Specify when the name delimiter is used between the second-to-last
-    ## and last name of a non-truncated name list. Only has an effect when
-    ## the "and" term or ampersand is used (e.g., "Doe and Smith" or "Doe,
-    ## and Smith").
-    [ a:defaultValue = "contextual" ]
-    attribute delimiter-precedes-last {
-      
-      ## The name delimiter is only used when the name list consists of
-      ## three or more names.
-      "contextual"
-      | 
-        ## The name delimiter is always used.
-        "always"
-      | 
-        ## The name delimiter is never used.
-        "never"
-      | 
-        ## The name delimiter is only used if the preceding name is inverted as
-        ## a result of the "name-as-sort-order" attribute.
-        "after-inverted-name"
-    }?,
-    
-    ## Set the minimum number of names needed in a name variable to activate
-    ## et-al abbreviation.
-    attribute et-al-min { xsd:integer }?,
-    
-    ## Set the number of names to render when et-al abbreviation is active.
-    attribute et-al-use-first { xsd:integer }?,
-    
-    ## As "et-al-min", but only affecting subsequent citations to an item.
-    attribute et-al-subsequent-min { xsd:integer }?,
-    
-    ## As "et-al-use-first", but only affecting subsequent citations to an
-    ## item.
-    attribute et-al-subsequent-use-first { xsd:integer }?,
-    
-    ## If set to "true", the "et-al" (or "and others") term is replaced by
-    ## an ellipsis followed by the last name of the name variable.
-    [ a:defaultValue = "false" ]
-    attribute et-al-use-last { xsd:boolean }?,
-    
-    ## If set to "false", names are not initialized and "initialize-with"
-    ## only affects initials already present in the input data.
-    [ a:defaultValue = "true" ] attribute initialize { xsd:boolean }?,
-    
-    ## Activate initializing of given names. The attribute value is appended
-    ## to each initial (e.g., with ". ", "Orson Welles" becomes "O. Welles").
-    attribute initialize-with { text }?,
-    
-    ## Specify whether (and which) names should be rendered in their sort
-    ## order (e.g., "Doe, John" instead of "John Doe").
-    attribute name-as-sort-order {
-      
-      ## Render the first name of each name variable in sort order.
-      "first"
-      | 
-        ## Render all names in sort order.
-        "all"
-    }?,
-    
-    ## Sets the delimiter for name-parts that have switched positions as a
-    ## result of "name-as-sort-order" (e.g., ", " in "Doe, John").
-    [ a:defaultValue = ", " ] attribute sort-separator { text }?
-  
-  name.name-part =
-    
-    ## Use to format individual name parts (e.g., "Jane DOE").
-    element cs:name-part {
-      attribute name { "family" | "given" },
-      affixes,
-      font-formatting,
-      text-case
-    }
-  
-  names.et-al =
-    
-    ## Specify the term used for et-al abbreviation and its formatting. 
-    element cs:et-al {
-      
-      ## Select the term to use for et-al abbreviation.
-      [ a:defaultValue = "et-al" ]
-      attribute term { "et-al" | "and others" }?,
-      font-formatting,
-      names.et-al.legacy-attributes
-    }
-  
-  ## Ignored in CSL 1.0.1. Will be disallowed with CSL 1.1.
-  names.et-al.legacy-attributes = affixes
-  
-  ## Inherits variable from the parent cs:names element.
-  names.label =
-    element cs:label {
-      [ a:defaultValue = "long" ] attribute form { term.form }?,
-      label.attributes-shared
-    }
-  
-  names.substitute =
-    
-    ## Specify substitution options when the name variables selected on the
-    ## parent cs:names element are empty.
-    element cs:substitute { (substitute.names | rendering-element)+ }
-  
-  ## Short version of cs:names, without children, allowed in cs:substitute.
-  substitute.names = element cs:names { names.attributes }
-}
-[ a:documentation [ xhtml:h2 [ "cs:date Rendering Element" ] ] ]
-div {
-  rendering-element.date =
-    element cs:date {
-      attribute variable { variables.dates },
-      ((
-        ## Limit the date parts rendered.
-        [ a:defaultValue = "year-month-day" ]
-        attribute date-parts {
-          
-          ## Year, month and day
-          "year-month-day"
-          | 
-            ## Year and month
-            "year-month"
-          | 
-            ## Year only
-            "year"
-        }?,
-        date.form,
-        rendering-element.date.date-part.localized*)
-       | (rendering-element.date.date-part.non-localized+, delimiter)),
-      affixes,
-      display,
-      font-formatting,
-      text-case
-    }
-  
-  rendering-element.date.date-part.localized =
-    
-    ## Specify overriding formatting for localized dates (affixes
-    ## cannot be overridden, as these are considered locale-specific).
-    ## Example uses are forcing the use of leading-zeros, or of the
-    ## "short" month form. Has no effect on which, and in what order,
-    ## date parts are rendered.
-    element cs:date-part {
-      font-formatting, text-case, (day | month | year)
-    }
-  
-  rendering-element.date.date-part.non-localized =
-    
-    ## Specify, in the desired order, the date parts that should be
-    ## rendered and their formatting.
-    element cs:date-part {
-      affixes, font-formatting, text-case, (day | month | year)
-    }
-  
-  day =
-    attribute name { "day" },
-    
-    ## Day forms: "numeric" ("5"), "numeric-leading-zeros" ("05"), "ordinal"
-    ## ("5th").
-    [ a:defaultValue = "numeric" ]
-    attribute form { "numeric" | "numeric-leading-zeros" | "ordinal" }?,
-    range-delimiter
-  
-  month =
-    attribute name { "month" },
-    
-    ## Months forms: "long" (e.g., "January"), "short" ("Jan."), "numeric"
-    ## ("1"), and "numeric-leading-zeros" ("01").
-    [ a:defaultValue = "long" ]
-    attribute form {
-      "long" | "short" | "numeric" | "numeric-leading-zeros"
-    }?,
-    range-delimiter,
-    strip-periods
-  
-  year =
-    attribute name { "year" },
-    
-    ## Year forms: "long" ("2005"), "short" ("05").
-    [ a:defaultValue = "long" ] attribute form { "short" | "long" }?,
-    range-delimiter
-  
-  range-delimiter =
-    
-    ## Specify a delimiter for date ranges (by default the en-dash). A custom
-    ## delimiter is retrieved from the largest date part ("day", "month" or
-    ## "year") that differs between the two dates.
-    [ a:defaultValue = "–" ] attribute range-delimiter { text }?
-}
-[ a:documentation [ xhtml:h2 [ "cs:text Rendering Element" ] ] ]
-div {
-  rendering-element.text =
-    
-    ## Use to call macros, render variables, terms, or verbatim text.
-    element cs:text {
-      text.attributes,
-      affixes,
-      display,
-      font-formatting,
-      quotes,
-      strip-periods,
-      text-case
-    }
-  
-  text.attributes =
-    
-    ## Select a macro.
-    attribute macro { xsd:NMTOKEN }
-    | (
-       ## Select a term.
-       attribute term { terms },
-       [ a:defaultValue = "long" ] attribute form { term.form }?,
-       
-       ## Specify term plurality: singular ("false") or plural ("true").
-       [ a:defaultValue = "false" ] attribute plural { xsd:boolean }?)
-    | 
-      ## Specify verbatim text.
-      attribute value { text }
-    | (
-       ## Select a variable.
-       attribute variable { variables.standard },
-       [ a:defaultValue = "long" ] attribute form { "short" | "long" }?)
-}
-[ a:documentation [ xhtml:h2 [ "cs:number Rendering Element" ] ] ]
-div {
-  rendering-element.number =
-    
-    ## Use to render a number variable.
-    element cs:number {
-      number.attributes, affixes, display, font-formatting, text-case
-    }
-  
-  number.attributes =
-    attribute variable { variables.numbers },
-    
-    ## Number forms: "numeric" ("4"), "ordinal" ("4th"), "long-ordinal"
-    ## ("fourth"), "roman" ("iv").
-    [ a:defaultValue = "numeric" ]
-    attribute form { "numeric" | "ordinal" | "long-ordinal" | "roman" }?
-}
-[ a:documentation [ xhtml:h2 [ "cs:label Rendering Element" ] ] ]
-div {
-  rendering-element.label =
-    
-    ## Use to render a term whose pluralization depends on the content of a
-    ## variable. E.g., if "page" variable holds a range, the plural label
-    ## "pp." is selected instead of the singular "p.".
-    element cs:label { label.attributes, label.attributes-shared }
-  
-  label.attributes =
-    attribute variable { variables.numbers | "locator" | "page" },
-    [ a:defaultValue = "long" ]
-    attribute form { "long" | "short" | "symbol" }?
-  
-  label.attributes-shared =
-    
-    ## Specify when the plural version of a term is selected.
-    [ a:defaultValue = "contextual" ]
-    attribute plural { "always" | "never" | "contextual" }?,
-    affixes,
-    font-formatting,
-    strip-periods,
-    text-case
-}
-[ a:documentation [ xhtml:h2 [ "cs:group Rendering Element" ] ] ]
-div {
-  rendering-element.group =
-    
-    ## Use to group rendering elements. Groups are useful for setting a
-    ## delimiter for the group children, for organizing the layout of
-    ## bibliographic entries (using the "display" attribute), and for
-    ## suppressing the rendering of terms and verbatim text when variables
-    ## are empty.
-    element cs:group {
-      group.attributes,
-      affixes,
-      delimiter,
-      display,
-      font-formatting,
-      rendering-element+
-    }
-  
-  group.attributes = notAllowed?
+    ## cs:group and its child elements are suppressed if a) at least one
+    ## rendering element in cs:group calls a variable (either directly or via a
+    ## macro), and b) all variables that are called are empty.
+    group =
+        element cs:group {
+            affixes,
+            quotes,
+            display,
+            attribute subgroup-delimiter { text }?,
+            attribute subgroup-delimiter-precedes-last { "contextual" | "always" | "never" }?,
+            attribute oops { text }?,
+            font-formatting,
+            delimiter,
+            attribute is-parallel { list{ ( xsd:boolean | "master" | "servant" )+ } }?,
+            cs-element+
+        }
 }
 [ a:documentation [ xhtml:h2 [ "Options" ] ] ]
 div {
-  style.options =
-    style.demote-non-dropping-particle,
-    style.initialize-with-hyphen,
-    style.page-range-format,
-    names-inheritable-options,
-    name-inheritable-options
-  
-  citation.options =
-    citation.cite-group-delimiter,
-    citation.collapse-options,
-    citation.disambiguate-options,
-    citation.near-note-distance,
-    names-inheritable-options,
-    name-inheritable-options
-  
-  bibliography.options =
-    bibliography.hanging-indent,
-    bibliography.line-formatting-options,
-    bibliography.second-field-align,
-    bibliography.subsequent-author-substitute-options,
-    names-inheritable-options,
-    name-inheritable-options
-  
-  style.demote-non-dropping-particle =
+    style-options = 
+        demote-non-dropping-particle-opt,
+        initialize-with-hyphen-opt,
+        page-range-format-opt,
+        year-range-format-opt,
+        name-opt,
+        names-opt
+    citation-options =
+        collapse-opt,
+        disambiguate-opt,
+        note-distance-opt,
+        name-opt,
+        names-opt
+    bibliography-options =
+        hanging-indent-opt,
+        line-formatting-opt,
+        second-field-align-opt,
+        subsequent-author-substitute-opt,
+        name-opt,
+        names-opt
     
-    ## Specify whether the non-dropping particle is demoted in inverted
-    ## names (e.g., "Koning, W. de").
-    [ a:defaultValue = "display-and-sort" ]
-    attribute demote-non-dropping-particle {
-      "never" | "sort-only" | "display-and-sort"
-    }?
-  
-  style.initialize-with-hyphen =
+    ## Determines whether the non-dropping particle is demoted in inverted
+    ## names (e.g. "Koning, W. de"). Defaults to "display-and-sort".
+    demote-non-dropping-particle-opt =
+        attribute demote-non-dropping-particle { "never" | "sort-only" | "display-and-sort" }?
     
-    ## Specify whether compound given names (e.g., "Jean-Luc") are
-    ## initialized with ("J-L") or without a hyphen ("JL").
-    [ a:defaultValue = "true" ]
-    attribute initialize-with-hyphen { xsd:boolean }?
-  
-  style.page-range-format =
+    ## Determines whether compound given names (e.g. "Jean-Luc") are
+    ## initialized with (J-L) or without a hyphen (JL). Defaults to true.
+    initialize-with-hyphen-opt =
+        attribute initialize-with-hyphen { xsd:boolean }?
     
-    ## Reformat page ranges in the "page" variable.
-    attribute page-range-format {
-      "chicago" | "expanded" | "minimal" | "minimal-two"
-    }?
-  
-  citation.cite-group-delimiter =
+    ## Abbreviation setting of ranges in the page variable
+    ## (by default no reformatting is applied to the input data).
+    page-range-format-opt =
+        attribute page-range-format { "expanded" | "minimal" | "minimal-two" | "chicago" }?
+    ## Abbreviation setting of ranges in year dates
+    ## (by default no reformatting is applied to the input data).
+    year-range-format-opt =
+        attribute year-range-format { "expanded" | "minimal" | "minimal-two" | "chicago" }?
     
-    ## Activate cite grouping and specify the delimiter for cites within a
-    ## cite group.
-    [ a:defaultValue = ", " ] attribute cite-group-delimiter { text }?
-  
-  citation.collapse-options =
+    ## The collapse options control citation collapsing.
+    collapse-opt =
+        attribute collapse {
+            
+            ## collapses numeric citations from [1, 2, 3] to [1-3]
+            "citation-number"
+            | 
+              ## collapses cites from (Doe 2000, Doe 2001) to (Doe 2000, 2001)
+              "year"
+            | 
+              ## collapses as "year", but also collapses (Doe 2000a, Doe 2000b)
+              ## to (Doe 2000a, b). Collapses as "year" when
+              ## disambiguate-add-year-suffix is not set to "true".
+              "year-suffix"
+            | 
+              ## collapses as "year-suffix", but also collapses ranges of
+              ## year-suffix markers, so (Doe 2000a, Doe 2000b, Doe 2000c)
+              ## becomes (Doe 2000a-c). Collapses as "year" when
+              ## disambiguate-add-year-suffix is not set to "true".
+              "year-suffix-ranged"
+        }?,
+        
+        ## Specifies the delimiter between year-suffix elements, when
+        ## year-suffix collapsing takes place. If not set the delimiter defaults
+        ## to that specified for the citation layout.
+        attribute year-suffix-delimiter { text }?,
+        
+        ## Specifies the delimiter following a group of collapsed cites.
+        attribute after-collapse-delimiter { text }?
     
-    ## Activate cite grouping and specify the method of citation collapsing.
-    attribute collapse {
-      
-      ## Collapse ranges of numeric cites, e.g. from "[1,2,3]" to "[1-3]".
-      "citation-number"
-      | 
-        ## Collapse cites by suppressing repeated names, e.g. from "(Doe
-        ## 2000, Doe 2001)" to "(Doe 2000, 2001)".
-        "year"
-      | 
-        ## Collapse cites as with "year", but also suppresses repeated
-        ## years, e.g. from "(Doe 2000a, Doe 2000b)" to "(Doe 2000a, b)".
-        "year-suffix"
-      | 
-        ## Collapses cites as with "year-suffix", but also collapses
-        ## ranges of year-suffixes, e.g. from "(Doe 2000a, Doe 2000b,
-        ## Doe 2000c)" to "(Doe 2000a-c)".
-        "year-suffix-ranged"
-    }?,
+    disambiguate-opt =
+        
+        ## When set true, add further names to uniquely identify the target
+        ## source, overriding the constraint imposed by
+        ## et-al-subsequent-use-first. The exact rendering of any names added is
+        ## determined by applying, in order: the form ("long" or "short"); the
+        ## initialize-with attribute, if present; and a given name
+        ## disambiguation rule, if disambiguate-add-givenname is set true.
+        attribute disambiguate-add-names { xsd:boolean }?,
+        
+        ## When set true, transform names as required by by the rule specified
+        ## by givenname-disambiguation-rule, or use the "all-names" rule by
+        ## default. Note that, all of the given name disambiguation rules except
+        ## for the "by-cite" rule, a name transformation will affect the way the
+        ## name is rendered in multiple references.
+        attribute disambiguate-add-givenname { xsd:boolean }?,
+        
+        ## Adds a year-suffix (e.g., 2007a) when there are two works by the same
+        ## author published in the same year included in one bibliography.
+        attribute disambiguate-add-year-suffix { xsd:boolean }?,
+        
+        attribute givenname-disambiguation-rule {
+            
+            ## The default given name disambiguation rule.  A given
+            ## name is first formatted as specified by the attributes
+            ## to name (form, initialize-with).  If the resulting name
+            ## does not uniquely identify the full name of the
+            ## individual, it is progressively transformed in the following
+            ## progression, until disambiguation succeeds:
+            ## 
+            ## 1. "short" becomes "long" + "initialize-with" if the latter is defined
+            ## 2. "long" + "initialize-with" becomes "long" if the former is defined
+            ## 3. "short" becomes "long"
+            ## 
+            ## Note that if the name begins in long form with the
+            ## given name as initials, step 1 in this list will be
+            ## skipped.  Likewise, if the name begins in short form
+            ## and the initialize-with attribute is not set, steps
+            ## 1 and 2 will be skipped.  If the name begins
+            ## in long form, this option will have no effect.
+            "all-names"
+            | 
+              ## Same as the "all-names" rule above, but omitting
+              ## steps 2 and 3 of that rule.
+              "all-names-with-initials"
+            | 
+              ## Same as the "all-names" rule above, but ambiguity
+              ## is only checked for the first-listed name
+              ## source, and only first-listed names are affected
+              ## by the transformation.
+              "primary-name"
+            | 
+              ## Same as the "primary-name" rule above, but omitting
+              ## steps 2 and 3 of that rule.
+              "primary-name-with-initials"
+            | 
+              ## Apply the transformation described under the "all-names"
+              ## rule above, but limit the transformation to the current
+              ## source.  The appearance of the name in other references
+              ## will not be affected.
+              "by-cite"
+        }?
     
-    ## Specify the delimiter between year-suffixes. Defaults to the cite
-    ## delimiter.
-    attribute year-suffix-delimiter { text }?,
+    ## The number of notes (footnotes or endnotes) within which a
+    ## preceding reference to the same source must occur in order for
+    ## position="near-note" to be true.  Defaults to 5.
+    note-distance-opt = attribute near-note-distance { xsd:integer }?
     
-    ## Specify the delimiter following a group of collapsed cites. Defaults
-    ## to the cite delimiter.
-    attribute after-collapse-delimiter { text }?
-  
-  citation.disambiguate-options =
+    ## If "true", bibliographic entries are rendered with hanging-indents.
+    hanging-indent-opt = attribute hanging-indent { xsd:boolean }?
     
-    ## Set to "true" to activate disambiguation by showing names that were
-    ## originally hidden as a result of et-al abbreviation.
-    [ a:defaultValue = "false" ]
-    attribute disambiguate-add-names { xsd:boolean }?,
+    ## entry-spacing and line-spacing default to 1.
+    line-formatting-opt =
+        attribute entry-spacing { xsd:integer }?,
+        attribute line-spacing { xsd:integer }?
     
-    ## Set to "true" to activate disambiguation by expanding names, showing
-    ## initials or full given names.
-    [ a:defaultValue = "false" ]
-    attribute disambiguate-add-givenname { xsd:boolean }?,
+    ## Aligns any subsequent lines of a bibliography entry with the beginning
+    ## of the second field. If set to "margin", the first field is put in the
+    ## margin and all subsequent lines of text are aligned with the margin.
+    second-field-align-opt = attribute second-field-align { "flush" | "margin" }?
     
-    ## Set to "true" to activate disambiguation by adding year-suffixes
-    ## (e.g., "(Doe 2007a, Doe 2007b)") for items from the same author(s)
-    ## and year.
-    [ a:defaultValue = "false" ]
-    attribute disambiguate-add-year-suffix { xsd:boolean }?,
-    
-    ## Specify how name are expanded for disambiguation.
-    [ a:defaultValue = "by-cite" ]
-    attribute givenname-disambiguation-rule {
-      
-      ## Each ambiguous names is progressively transformed until
-      ## disambiguated (when disambiguation is not possible, the name
-      ## remains in its original form).
-      "all-names"
-      | 
-        ## As "all-names", but name expansion is limited to showing
-        ## initials.
-        "all-names-with-initials"
-      | 
-        ## As "all-names", but disambiguation is limited to the first name
-        ## of each cite.
-        "primary-name"
-      | 
-        ## As "all-names-with-initials", but disambiguation is limited to
-        ## the first name of each cite.
-        "primary-name-with-initials"
-      | 
-        ## As "all-names", but only ambiguous names in ambiguous cites are
-        ## expanded.
-        "by-cite"
-    }?
-  
-  citation.near-note-distance =
-    
-    ## Set the number of preceding notes (footnotes or endnotes) within
-    ## which the current item needs to have been previously cited in order
-    ## for the "near-note" position to be "true".
-    [ a:defaultValue = "5" ]
-    attribute near-note-distance { xsd:integer }?
-  
-  bibliography.hanging-indent =
-    
-    ## Set to "true" to render bibliographic entries with hanging indents.
-    [ a:defaultValue = "false" ]
-    attribute hanging-indent { xsd:boolean }?
-  
-  bibliography.line-formatting-options =
-    
-    ## Set the spacing between bibliographic entries.
-    [ a:defaultValue = "1" ]
-    attribute entry-spacing { xsd:nonNegativeInteger }?,
-    
-    ## Set the spacing between bibliographic lines.
-    [ a:defaultValue = "1" ]
-    attribute line-spacing {
-      xsd:integer { minExclusive = "0" }
-    }?
-  
-  bibliography.second-field-align =
-    
-    ## Use to align any subsequent lines of bibliographic entries with the
-    ## beginning of the second field.
-    attribute second-field-align {
-      
-      ## Align the first field with the margin.
-      "flush"
-      | 
-        ## Put the first field in the margin and align all subsequent
-        ## lines of text with the margin.
-        "margin"
-    }?
-  
-  bibliography.subsequent-author-substitute-options =
-    
-    ## Substitute names that repeat in subsequent bibliographic entries by
-    ## the attribute value.
-    attribute subsequent-author-substitute { text }?,
-    
-    ## Specify the method of substitution of names repeated in subsequent
-    ## bibliographic entries.
-    [ a:defaultValue = "complete-all" ]
-    attribute subsequent-author-substitute-rule {
-      
-      ## Requires a match of all rendered names in the name variable, and
-      ## substitutes once for all names.
-      "complete-all"
-      | 
-        ## Requires a match of all rendered names in the name variable,
-        ## and substitutes for each name.
-        "complete-each"
-      | 
-        ## Substitutes for each name, until the first mismatch.
-        "partial-each"
-      | 
-        ## Substitutes the first name if it matches.
-        "partial-first"
-    }?
-  
-  ## Options affecting cs:names, for cs:style, cs:citation and cs:bibliography.
-  names-inheritable-options =
-    
-    ## Inheritable name option, companion for "delimiter" on cs:names.
-    attribute names-delimiter { text }?
-  
-  ## Options affecting cs:name, for cs:style, cs:citation and cs:bibliography.
-  name-inheritable-options =
-    name.attributes,
-    
-    ## Inheritable name option, companion for "delimiter" on cs:name.
-    attribute name-delimiter { text }?,
-    
-    ## Inheritable name option, companion for "form" on cs:name.
-    [ a:defaultValue = "long" ]
-    attribute name-form { "long" | "short" | "count" }?
+    ## Substitutes subsequent recurrences of an author for a given string.
+    subsequent-author-substitute-opt = (
+        attribute subsequent-author-substitute { text },
+        ## Sets the rule to use for author substitution
+        attribute subsequent-author-substitute-rule { "complete-all" | "complete-each" | "partial-each" | "partial-first" }?
+    )?
 }
-[ a:documentation [ xhtml:h2 [ "cs:sort - Sorting" ] ] ]
+[ a:documentation [ xhtml:h2 [ "Sorting" ] ] ]
 div {
-  sort =
+    all-variables = cs-variables | cs-dates | cs-names
     
-    ## Specify how cites and bibliographic entries should be sorted. By
-    ## default, items appear in the order in which they were cited.
-    element cs:sort { sort.key+ }
-  
-  sort.key =
-    element cs:key {
-      (attribute variable { variables }
-       | attribute macro { xsd:NMTOKEN }),
-      
-      ## The minimum number of names needed in a name variable to activate
-      ## name list truncation. Overrides the values set on any
-      ## "et-al-(subsequent-)min" attributes.
-      attribute names-min { xsd:integer }?,
-      
-      ## The number of names to render when name list truncation is
-      ## activated. Overrides the values set on the
-      ## "et-al-(subsequent-)use-first" attributes.
-      attribute names-use-first { xsd:integer }?,
-      
-      ## Use to override the value of the "et-at-use-last" attribute.
-      attribute names-use-last { xsd:boolean }?,
-      
-      ## Select between an ascending and descending sort.
-      [ a:defaultValue = "ascending" ]
-      attribute sort { "ascending" | "descending" }?
-    }
-}
-[
-  a:documentation [ xhtml:h2 [ "cs:choose - Conditional Statements" ] ]
-]
-div {
-  rendering-element.choose =
-    
-    ## Use to conditionally render rendering elements.
-    element cs:choose { choose.if, choose.else-if*, choose.else? }
-  
-  choose.if = element cs:if { condition+, match, rendering-element* }
-  
-  choose.else-if =
-    element cs:else-if { condition+, match, rendering-element* }
-  
-  choose.else = element cs:else { rendering-element+ }
-  
-  condition =
-    
-    ## If used, the element content is only rendered if it disambiguates two
-    ## otherwise identical citations. This attempt at disambiguation is only
-    ## made after all other disambiguation methods have failed.
-    [ a:defaultValue = "true" ] attribute disambiguate { "true" }
-    | 
-      ## Tests whether the given variables contain numeric text.
-      attribute is-numeric {
-        list { variables+ }
-      }
-    | 
-      ## Tests whether the given date variables contain approximate dates.
-      attribute is-uncertain-date {
-        list { variables.dates+ }
-      }
-    | 
-      ## Tests whether the locator matches the given locator types.
-      attribute locator {
-        list { (terms.locator.testable | "sub-verbo")+ }
-      }
-    | 
-      ## Tests whether the cite position matches the given positions.
-      attribute position {
-        list {
-          ("first"
-           | "subsequent"
-           | "ibid"
-           | "ibid-with-locator"
-           | "near-note")+
+    ## Specifies the sort order within citations or the bibliography. By
+    ## default, items are sorted in the order cited.
+    sort = element cs:sort { key+ }
+    key =
+        element cs:key {
+            
+            (attribute variable { all-variables }
+             | attribute macro { xsd:NMTOKEN }),
+            
+            ## Default sort order is ascending
+            attribute sort { "ascending" | "descending" }?,
+            
+            ## names-min and names-use-first can be used to (further) constrain
+            ## the number of names used in a name sort, overriding the values
+            ## set on the et-al abbreviation attributes.
+            attribute names-min { xsd:integer }?,
+            attribute names-use-first { xsd:integer }?,
+            
+            ## names-use-last can be used to override the value of et-at-use-last
+            attribute names-use-last { xsd:boolean }?
         }
-      }
-    | 
-      ## Tests whether the item matches the given types.
-      attribute type {
-        list { item-types+ }
-      }
-    | 
-      ## Tests whether the default ("long") forms of the given variables
-      ## contain non-empty values.
-      attribute variable {
-        list { variables+ }
-      }
-  
-  match =
+}
+[ a:documentation [ xhtml:h2 [ "Conditional Statements" ] ] ]
+div {
     
-    ## Set the testing logic.
-    [ a:defaultValue = "all" ]
-    attribute match {
+    ## The choose elements provides a simple conditional structure.
+    choose = element cs:choose { if, else-if*, else? }
+    if = element cs:if { condition+, cs-element* }
+    else-if = element cs:else-if { condition+, cs-element* }
+    else = element cs:else { cs-element+ }
+    condition = (
+       
+        ## The contents of an <if disambiguate="true"> block is only rendered if
+        ## it disambiguates two otherwise identical citations. This attempt at
+        ## disambiguation will only be made when all other disambiguation
+        ## methods have failed to uniquely identify the target source.
+        attribute disambiguate { "true" }
       
-      ## Element only tests "true" when all conditions test "true" for all
-      ## given test values.
-      "all"
       | 
-        ## Element tests "true" when any condition tests "true" for any given
-        ## test value.
-        "any"
-      | 
-        ## Element only tests "true" when none of the conditions test "true"
-        ## for any given test value.
-        "none"
-    }?
+        ## Tests whether the given variables contain numeric data
+        attribute is-numeric {
+            list { all-variables+ }
+        }
+        
+      |
+        ## Tests whether the given date variables contain uncertain dates
+        attribute is-uncertain-date { 
+            list { cs-dates+ }
+        }
+        
+      |
+        ## Tests whether the locator label matches the given label
+        attribute locator {
+            list { cs-terms.locator+ }
+        }
+        
+      |
+        ## Tests whether the page label matches the given label
+        attribute page {
+            list { cs-terms.locator+ }
+        }
+        
+      |
+        ## The boolean operators below indicate the relative position of a 
+        ## reference within the document.  These should be checked in 
+        ## the order shown below: "first" is true only once, on the first
+        ## use of the reference; when "ibid-with-locator" is true, "ibid"
+        ## and "subsequent are also true; and when "ibid" is true, "subsequent"
+        ## is also true.  The "near-note" operator is true if and only if the
+        ## reference has been used within five footnotes (or endnotes, as the 
+        ## case may be), counting backward from the current note.  This threshold
+        ## may be adjusted using the "near-note-distance" option.  The value of 
+        ## "near-note" is *always* false for references that are not in a 
+        ## footnote/endnote.
+        attribute position {
+            list { ("first" | "subsequent" | "ibid" | "ibid-with-locator" | "near-note") }
+        }
+        
+      |
+        ## Tests whether the item matches the given types
+        attribute type {
+            list { cs-types+ }
+        }
+
+      |        
+        ## Tests whether the given variables contain non-empty values
+        attribute variable {
+            list { (all-variables+ | "type") }
+        }
+
+      |
+        ## Specifies the test criterion (default is all)
+        ##     all: a condition tests "true" when it tests "true" for all of the
+        ##          given condition values
+        ##     any: a condition tests "true" when it tests "true" for any of the
+        ##          given condition values
+        ##    none: a condition tests "true" when it tests "true" for none of the
+        ##          given condition values
+        attribute match { "all" | "any" | "none" }
+
+      |
+        ## Tests whether the jurisdiction variable matches the given jurisdictions
+        attribute jurisdiction {
+            list { jurisdictions+ }
+        }
+      |
+        ## Tests whether the statement containing the condition is being
+        ## executed inside cs:citation or cs:bibliography
+        attribute context { "citation" | "bibliography" }
+      |
+        ## False if no date value, or date contains a month or season.
+       attribute has-year-only {
+           list { cs-dates+ }
+       }
+      |
+        ## False if no date value, no month or season value, or date contains a day.
+       attribute has-month-or-season-only {
+           list { cs-dates+ }
+       }
+      |
+        ## False if no date value, no month value, or no day value.
+       attribute has-day {
+           list { cs-dates+ }
+       }
+      |
+       # True if the number of subjurisdictions
+       # below top level is equal to or greater than integer
+       attribute subjurisdictions { xsd:integer }
+      |
+       attribute is-plural { cs-names }
+    )
 }
 
 ## Formatting attributes.
 div {
-  affixes =
-    [ a:defaultValue = "" ] attribute prefix { text }?,
-    [ a:defaultValue = "" ] attribute suffix { text }?
-  
-  delimiter = attribute delimiter { text }?
-  
-  display =
-    
-    ## By default, bibliographic entries consist of continuous runs of text.
-    ## With the "display" attribute, portions of each entry can be
-    ## individually positioned.
-    attribute display {
-      
-      ## Places the content in a block stretching from margin to margin.
-      "block"
-      | 
-        ## Places the content in a block starting at the left margin.
-        "left-margin"
-      | 
-        ## Places the content in a block to the right of a preceding
-        ## "left-margin" block.
-        "right-inline"
-      | 
-        ## Places the content in a block indented to the right by a standard
-        ## amount.
-        "indent"
+    ## Strings for use in affixes
+    string-no-leading-space = xsd:string { pattern = "([^ ].*)*" }
+    string-no-trailing-space = xsd:string { pattern = "(.*[^ ])*" }
+
+	# Affixes
+    affixes =
+        attribute prefix { string-no-leading-space }?,
+        attribute suffix { string-no-trailing-space }?
+    affixes-date =
+        attribute prefix { text }?,
+        attribute suffix { text }?
+	affixes-leading-name-label = 
+        attribute prefix { string-no-leading-space }?,
+        attribute suffix { text }?
+	affixes-trailing-name-label = 
+        attribute prefix { text }?,
+        attribute suffix { string-no-trailing-space }?
+
+	# Delimiter
+    delimiter = attribute delimiter { text }?
+
+    ## The text of each individual cite is normally formatted as a
+    ## single continuous run of text.  Portions of the cite text can be
+    ## specially positioned using the display attribute.
+    display = attribute display {
+        
+        ## Set the display value set to "block" to place the content
+        ## in a block stretching from margin to margin.
+        "block"
+        | 
+          ## Set the display value set to "left-margin" to place the
+          ## content in a block of fixed width starting at the left 
+          ## margin.  All "left-margin" blocks in a bibliography share
+          ## the same width, set according to the maximum number of
+          ## characters appearing in any one such block.
+          "left-margin"
+        | 
+          ## Set the display value to "right-inline" to place the
+          ## content in a block directly to the right of any immediately
+          ## preceding "left-margin" block, and extending to the
+          ## right margin.
+          "right-inline"
+        | 
+          ## Set the display value to "indent" to block-indent the
+          ## text to the right by a standard amount.
+          "indent"
     }?
-  
-  ## The font-formatting attributes are based on those of CSS and XSL-FO.
-  font-formatting =
-    [ a:defaultValue = "normal" ]
-    attribute font-style { "italic" | "normal" | "oblique" }?,
-    [ a:defaultValue = "normal" ]
-    attribute font-variant { "normal" | "small-caps" }?,
-    [ a:defaultValue = "normal" ]
-    attribute font-weight { "normal" | "bold" | "light" }?,
-    [ a:defaultValue = "none" ]
-    attribute text-decoration { "none" | "underline" }?,
-    [ a:defaultValue = "baseline" ]
-    attribute vertical-align { "baseline" | "sup" | "sub" }?
-  
-  quotes =
     
-    ## When set to "true", quotes are placed around the rendered text.
-    [ a:defaultValue = "false" ] attribute quotes { xsd:boolean }?
-  
-  strip-periods =
+    ## attributes are drawn directly from CSS and FO where possible
+    font-formatting =
+        attribute font-style { "italic" | "normal" | "oblique" }?,
+        attribute font-variant { "normal" | "small-caps" }?,
+        attribute font-weight { "normal" | "bold" | "light" }?,
+        attribute text-decoration { "none" | "underline" }?,
+        attribute vertical-align { "baseline" | "sup" | "sub" }?
     
-    ## When set to "true", periods are removed from the rendered text.
+    ## When set to true (false is the default), quotes (defined as terms) are
+    ## placed around the rendered text. Nested quotes flipflop.
+    quotes = attribute quotes { xsd:boolean }?
+    
+    ## Removes any periods from the rendered text (defaults to false)
     [ a:defaultValue = "false" ]
-    attribute strip-periods { xsd:boolean }?
-  
-  text-case =
-    attribute text-case {
-      
-      ## Renders text in lowercase.
-      "lowercase"
-      | 
-        ## Renders text in uppercase.
-        "uppercase"
-      | 
-        ## Capitalizes the first character (other characters remain in
-        ## their original case).
-        "capitalize-first"
-      | 
-        ## Capitalizes the first character of every word (other characters
-        ## remain in their original case).
-        "capitalize-all"
-      | 
-        ## Renders text in title case.
-        "title"
-      | 
-        ## Renders text in sentence case.
-        "sentence"
-    }?
+    strip-periods = attribute strip-periods { xsd:boolean }?
+    
+    text-case =
+        attribute text-case {
+            
+            ## display all text as lowercase
+            "lowercase"
+            | 
+              ## display all text as uppercase
+              "uppercase"
+            | 
+              ## capitalize first character; other characters
+              ## displayed as is
+              "capitalize-first"
+            | 
+              ## capitalize first character of every word;
+              ## other characters displayed lowercase
+              "capitalize-all"
+            | 
+              ## display as title case (the Chicago Manual
+              ## of Style calls this "headline style")
+              "title"
+            | 
+              ## display as sentence case/sentence style
+              "sentence"
+            |
+              ## do not perform formatting operations on input
+              "normal"
+        }?
 }
