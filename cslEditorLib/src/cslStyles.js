@@ -89,14 +89,12 @@ define(['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils, debug) {
 
 	// This fetches the CSL code for the given styleId
 	var fetchCslCode = function (styleId, success, error, async /* optional */) {
-
 		var localURL = localURLFromZoteroId(styleId);
 
 		if (typeof(async) === "undefined") {
-			async = false;
+			async = true;
 		}
 
-        try {
 		$.ajax({
 			url : localURL,
 			dataType : "text",
@@ -104,9 +102,6 @@ define(['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils, debug) {
 			error : error,
 			async : async
 		});
-        } catch (e) {
-            alert("OKAY, WHAT NOW: "+e);
-        }
 	};
 
 	// Returns an object containing information on all styles in the repository:

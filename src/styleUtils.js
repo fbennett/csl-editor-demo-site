@@ -24,10 +24,6 @@ define(
 	// e.g. when user clicks on an "Edit Style" button
 	var editStyle = function (styleId, visualEditorUrl) {
 		var styleURL = CSLEDIT_cslStyles.localURLFromZoteroId(styleId);
-
-		var baseUrl = "external/csl-styles/";
-        alert("DEBUG SO WHAT IS THIS? "+styleId.replace("http://citationstylist.org/styles/", baseUrl) + ".csl");
-
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleURL,
 			function (cslCode) {
@@ -37,7 +33,7 @@ define(
 				}
 			},
 			function () {
-				alert("DEBUG Couldn't fetch style: " + styleId+" -> "+styleURL);
+				alert("Couldn't fetch style: " + styleURL);
 			}
 		);
 	};
@@ -57,7 +53,6 @@ define(
 	// Event handler for a 'Install Style' action
 	// e.g. when user clicks on an "Install Style" button
 	var installStyle = function (styleId) {
-        alert("DEBUG: Oh, fuck");
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleId,
 			function (cslCode) {
