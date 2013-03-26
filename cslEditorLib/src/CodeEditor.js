@@ -48,7 +48,7 @@ define('src/exampleData',[],function () {
 		"id": 2952,
 		"type": "webpage",
 		"key": "WETSI8AT",
-		"title": "<span class=\"small-caps\">CSL-m</span> Specification Supplement",
+		"title": "<sc>CSL-m</sc> Specification Supplement",
 		"URL": "http://gsl-nagoya-u.net/http/pub/citeproc-js-csl.html",
 		"author": [
 			{
@@ -2871,7 +2871,7 @@ define('src/cslStyles',['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils
 		}
 
 		return CSLEDIT_urlUtils.getResourceUrl(
-			styleId.replace("http://citationstylist/styles/", baseUrl) + ".csl");
+			styleId.replace("http://citationstylist/github/", baseUrl) + ".csl");
 	};
 
 	// This fetches the CSL code for the given styleId
