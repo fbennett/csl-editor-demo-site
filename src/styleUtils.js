@@ -23,6 +23,7 @@ define(
 	// Event handler for an 'Edit Style' action
 	// e.g. when user clicks on an "Edit Style" button
 	var editStyle = function (styleId, visualEditorUrl) {
+        alert("DEBUG WOWOW");
 		var styleURL = CSLEDIT_cslStyles.localURLFromZoteroId(styleId);
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleURL,
