@@ -26,7 +26,7 @@ define(
 		var styleURL = CSLEDIT_cslStyles.localURLFromZoteroId(styleId);
 
 		var baseUrl = "external/csl-styles/";
-        alert("DEBUG SO WHAT IS THIS? "+styleId.replace("http://citationstylist.org/styles/", baseUrl) + ".csl"));
+        alert("DEBUG SO WHAT IS THIS? "+styleId.replace("http://citationstylist.org/styles/", baseUrl) + ".csl");
 
 		CSLEDIT_cslStyles.fetchCslCode(
 			styleURL,
