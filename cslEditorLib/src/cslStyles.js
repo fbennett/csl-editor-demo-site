@@ -91,7 +91,7 @@ define(['src/urlUtils', 'src/debug'], function (CSLEDIT_urlUtils, debug) {
 	var fetchCslCode = function (styleId, success, error, async /* optional */) {
 		var localURL = localURLFromZoteroId(styleId);
 
-        
+        alert("DEBUG: localURL: "+localURL);
 
 		if (typeof(async) === "undefined") {
 			async = true;
